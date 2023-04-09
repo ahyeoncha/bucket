@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet"
+        integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js"
+        integrity="sha384-MrcW6ZMFYlzcLA8Nl+NtUVF0sA7MsXsP1UyJoMp4YLEuNSfAP+JcXn/tWtIaxVXM"
+        crossorigin="anonymous"></script>
+
+    <link href="https://fonts.googleapis.com/css2?family=Gowun+Dodum&display=swap" rel="stylesheet">
+
+    <title>인생 버킷리스트</title>
+
+    <style>
+        * {
+            font-family: 'Gowun Dodum', sans-serif;
+        }
+        .mypic {
+            width: 100%;
+            height: 200px;
+
+            background-image: linear-gradient(0deg, rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.5)), url('https://images.unsplash.com/photo-1601024445121-e5b82f020549?ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&ixlib=rb-1.2.1&auto=format&fit=crop&w=1189&q=80');
+            background-position: center;
+            background-size: cover;
+
+            color: white;
+
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+        .mypic > h1 {
+            font-size: 30px;
+        }
+        .mybox {
+            width: 95%;
+            max-width: 700px;
+            padding: 20px;
+            box-shadow: 0px 0px 10px 0px lightblue;
+            margin: 20px auto;
+        }
+        .mybucket {
+            display: flex;
+            flex-direction: row;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .mybucket > input {
+            width: 70%;
+        }
+        .mybox > li {
+            display: flex;
+            flex-direction: row;
+            align-items: center;
+            justify-content: center;
+
+            margin-bottom: 10px;
+            min-height: 48px;
+        }
+        .mybox > li > h2 {
+            max-width: 75%;
+            font-size: 20px;
+            font-weight: 500;
+            margin-right: auto;
+            margin-bottom: 0px;
+        }
+        .mybox > li > h2.done {
+            text-decoration:line-through
+        }
+    </style>
+    <script>
+        $(document).ready(function () {
+            show_bucket();
+        });
+
+        function show_bucket() {
+            $('#bucket-list').empty()
+            $.ajax({
+                type: "GET",
+                url: "/bucket",
+                data: {},
+                success: function(response) {
+                    // [GET] 3. 사전형 데이터를 변수 각각에 할당
+                    // for문 추가
+                    let rows = response['buckets']
+                    for (let i = 0; i < rows.length; i++) {
+                        let bucket = rows[i]['bucket']
+                        let num = rows[i]['num']
+                        let done = rows[i]['done']
+                        // [GET] 4. done에 따라서 li의 형태 바꿔주기
+                        let temp_html = ``
+                        if(done == 0) {  // 아직 안한 것
+                            temp_html = `<li>
+                                    <h2>✅ ${bucket}</h2>
+                                    <button onclick="done_bucket(${num})" type="button" class="btn btn-outline-primary">완료!</button>
+                                </li>` 
+                             } else {
+                                    temp_html = `<li>
+                                    <h2 class="done">✅ ${bucket}</h2>
+                                </li>`
+                            }
+                                // [GET] 5. 기존의 데이터에 붙여주기
+                                 $('#bucketlist').append(temp_html)
+                        }
+                    }
+                });
+            }
+        function save_bucket(){
+            // [POST] 5. 입력받은 데이터를 변수에 저장
+            let bucket = $('#bucket').val()
+
+            $.ajax({
+                type: "POST",
+                url: "/bucket",
+                data: {bucket_give:bucket},   // [POST] 6. 서버로 보내줌
+                success: function (response) {
+                    alert(response["msg"])
+                    window.location.reload()  // [POST] 7. 새로고침
+        }
+    });
+}
+        function done_bucket(num){   // 새로운 줄이 생성될 때부터 줄의 번호와 같이 생성
+            $.ajax({
+                type: "POST",
+                url: "/bucket/done",
+                // [2GET] 2. 아예 num을 바로 넘겨주기
+                data: {'num_give':num},
+                success: function (response) {
+                    alert(response["msg"])
+                    window.location.reload()  // [2GET] 3. 새로고침
+        }
+    });
+}
+    </script>
+</head>
+<body>
+    <div class="mypic">
+        <h1>나의 버킷리스트</h1>
+    </div>
+    <div class="mybox">
+        <div class="mybucket">
+            <input id="bucket" class="form-control" type="text" placeholder="이루고 싶은 것을 입력하세요">
+            <button onclick="save_bucket()" type="button" class="btn btn-outline-primary">기록하기</button>
+    </div>
+        </div>
+    </div>
+    <div class="mybox" id="bucketlist">
+        <li>
+            <h2>✅ 스위스 일주일 여행가기</h2>
+            <button onclick="done_bucket(5)" type="button" class="btn btn-outline-primary">완료!</button>
+        </li>
+        <li>
+            <h2 class="done">✅ 스위스 이글루 호텔에서 1박 보내기</h2>
+        </li>
+        <li>
+            <h2>✅ 스위스 인터라켄 패러글라이딩 하기</h2>
+            <button type="button" class="btn btn-outline-primary">완료!</button>
+        </li>
+    </div>
+</body>
+</html>
